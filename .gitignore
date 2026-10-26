@@ -1,0 +1,29 @@
+# local-only planning docs and brief
+CLAUDE.md
+handoff.md
+session.md
+issues.md
+build-plan.md
+architecture.md
+git-state.md
+docs/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# node
+node_modules/
+dist/
+
+# env
+.env
+.env.*
+!.env.example
+
+.DS_Store
+.vscode/
+.idea/
