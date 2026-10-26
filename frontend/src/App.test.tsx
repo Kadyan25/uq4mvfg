@@ -49,26 +49,38 @@ describe('App', () => {
     mockApi()
     render(<App />)
 
-    expect(await screen.findByText('07:30 UTC, 1 Jan')).toBeInTheDocument()
-    expect(screen.getByText(/16\.5 h before delivery/)).toBeInTheDocument()
+    expect(await screen.findByText('07:30 UTC · 1 Jan')).toBeInTheDocument()
+    expect(screen.getByText('Lead time 16.5 h')).toBeInTheDocument()
     expect(screen.getByText('Fri 2 Jan 2026')).toBeInTheDocument()
+    expect(screen.getByText('11 / 10 GWh')).toBeInTheDocument()
     expect(screen.getByText('+1.00 GW')).toBeInTheDocument()
+    expect(screen.getByText('Over-forecast')).toBeInTheDocument()
   })
 
-  it('shows the month summary and buying guidance', async () => {
+  it('shows the month summary and error distribution', async () => {
     mockApi()
     render(<App />)
 
-    expect(await screen.findByText('How much wind to hold back on')).toBeInTheDocument()
+    expect(await screen.findByText('Error distribution')).toBeInTheDocument()
     expect(screen.getByText('4.1 GW')).toBeInTheDocument()
-    expect(screen.getByText('Across 744 hours')).toBeInTheDocument()
+    expect(screen.getByText('+4.1 GW')).toBeInTheDocument()
+    expect(screen.getByText('744 hours')).toBeInTheDocument()
+  })
+
+  it('exposes metric definitions as accessible tooltips', async () => {
+    mockApi()
+    render(<App />)
+
+    await screen.findByText('Error distribution')
+    expect(screen.getAllByRole('img', { name: /Mean absolute error/ }).length).toBeGreaterThan(0)
+    expect(screen.getByRole('img', { name: /EPEX GB day-ahead auction gate closure/ })).toBeInTheDocument()
   })
 
   it('requests the default gate-closure cutoff', async () => {
     const fetchMock = mockApi()
     render(<App />)
 
-    await screen.findByText('07:30 UTC, 1 Jan')
+    await screen.findByText('07:30 UTC · 1 Jan')
     const dayCall = fetchMock.mock.calls.map(([u]) => String(u)).find((u) => u.startsWith('/api/day'))
     expect(dayCall).toBe('/api/day?decision_date=2026-01-01&cutoff=09%3A20')
   })
@@ -80,17 +92,17 @@ describe('App', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Upstream data source is unavailable')
   })
 
-  it('explains when no forecast existed before the cutoff', async () => {
+  it('shows an empty state when no forecast existed before the cutoff', async () => {
     mockApi({ day: () => json({ ...day, forecast_publish_time: null, forecast: [], hourly: [], metrics: null, cutoff: '2026-01-01T01:00:00Z' }) })
     render(<App />)
 
-    expect(await screen.findByText(/No wind forecast had been published by 01:00 UTC/)).toBeInTheDocument()
+    expect(await screen.findByText('No forecast published before 01:00 UTC.')).toBeInTheDocument()
   })
 
   it('offers a reset after changing the cutoff', async () => {
     const fetchMock = mockApi()
     render(<App />)
-    const input = await screen.findByLabelText('Decision cutoff (UTC)')
+    const input = await screen.findByLabelText('Gate closure (UTC)')
 
     // jsdom can't type into time inputs, so set the value the way the browser would.
     fireEvent.change(input, { target: { value: '06:00' } })

@@ -17,7 +17,7 @@ export function DailyErrorChart({ days, selectedDecisionDate, onSelect }: Props)
   }))
 
   return (
-    <div className="chart" role="img" aria-label="Average forecast error for each delivery day">
+    <div className="chart" role="img" aria-label="MAE by delivery date">
       <ResponsiveContainer width="100%" height={260}>
         <BarChart data={data} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
           <CartesianGrid stroke="var(--grid)" vertical={false} />
@@ -29,7 +29,7 @@ export function DailyErrorChart({ days, selectedDecisionDate, onSelect }: Props)
             contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8 }}
             formatter={(v, _name, item) => [
               `${formatGw(Number(v), 2)} (bias ${formatSignedGw(item.payload.bias, 2)})`,
-              'Mean absolute error',
+              'MAE',
             ]}
             labelFormatter={(label) => `Delivery ${label}`}
           />

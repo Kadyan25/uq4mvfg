@@ -1,4 +1,6 @@
+import { DEFINITIONS } from '../lib/definitions'
 import { formatGw, formatSignedGw } from '../lib/format'
+import { InfoTip } from './InfoTip'
 
 interface Props {
   p10: number
@@ -6,33 +8,31 @@ interface Props {
   p90: number
 }
 
-/** Turns signed error percentiles (forecast − actual) into plain buying guidance. */
 export function ErrorBand({ p10, p50, p90 }: Props) {
   return (
     <div className="band">
-      <h3>How much wind to hold back on</h3>
-      <p className="band-lead">
-        In 9 out of 10 hours, actual wind came in no more than <strong>{formatGw(Math.max(p90, 0))}</strong> below
-        the decision-time forecast.
-      </p>
+      <h3>
+        Error distribution
+        <InfoTip text={DEFINITIONS.distribution} />
+      </h3>
       <dl className="band-grid">
         <div>
-          <dt>P10 error</dt>
+          <dt>P10</dt>
           <dd>{formatSignedGw(p10)}</dd>
         </div>
         <div>
-          <dt>Median error</dt>
+          <dt>P50</dt>
           <dd>{formatSignedGw(p50)}</dd>
         </div>
         <div>
-          <dt>P90 error</dt>
+          <dt>P90</dt>
           <dd>{formatSignedGw(p90)}</dd>
         </div>
       </dl>
-      <p className="band-note">
-        Error = forecast − actual. Positive means the forecast promised more wind than arrived, so extra power had to
-        be bought.
+      <p className="band-lead">
+        P90 over-forecast <strong>{formatGw(Math.max(p90, 0))}</strong>
       </p>
+      <p className="band-note">Error = forecast − outturn</p>
     </div>
   )
 }

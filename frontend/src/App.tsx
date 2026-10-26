@@ -24,14 +24,12 @@ function Dashboard({ meta }: { meta: MetaResponse }) {
         onDecisionDateChange={setDecisionDate} onCutoffChange={setCutoff} />
 
       <section className="section" aria-labelledby="day-title">
-        <h2 id="day-title">What the buying desk would have seen</h2>
-        <p className="section-lead">The latest wind forecast published before the cutoff, against what the wind actually did.</p>
+        <h2 id="day-title">Forecast vs outturn</h2>
         {day.status === 'success' ? <DayView day={day.data} /> : <Status state={day} />}
       </section>
 
       <section className="section" aria-labelledby="period-title">
-        <h2 id="period-title">How far can you trust it? January 2026</h2>
-        <p className="section-lead">Forecast accuracy at the same cutoff, across every decision day in the month.</p>
+        <h2 id="period-title">Forecast accuracy · January 2026</h2>
         {summary.status === 'success'
           ? <PeriodView summary={summary.data} selectedDecisionDate={decisionDate} onSelectDay={setDecisionDate} />
           : <Status state={summary} />}
@@ -46,13 +44,13 @@ export default function App() {
   return (
     <div className="page">
       <header className="header">
-        <h1>UK Wind: Day-Ahead Forecast Check</h1>
-        <p>National wind generation forecasts vs. outturn, from Elexon BMRS. All times UTC.</p>
+        <h1>UK Wind Forecast Monitor</h1>
+        <p>National wind · Elexon BMRS · UTC</p>
       </header>
       <main>
         {meta.status === 'success' ? <Dashboard meta={meta.data} /> : <Status state={meta} />}
       </main>
-      <footer className="footer">Data: Elexon BMRS (WINDFOR forecasts, FUELHH outturn).</footer>
+      <footer className="footer">Source: Elexon BMRS (WINDFOR, FUELHH)</footer>
     </div>
   )
 }

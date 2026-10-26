@@ -21,10 +21,6 @@ export function formatPct(value: number | null | undefined): string {
   return `${value.toFixed(1)}%`
 }
 
-export function formatGwh(mwh: number): string {
-  return `${(mwh / 1000).toFixed(0)} GWh`
-}
-
 export function formatClock(iso: string): string {
   const d = new Date(iso)
   return `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`
@@ -41,5 +37,11 @@ export function formatDateShort(isoDate: string): string {
 }
 
 export function formatPublished(iso: string): string {
-  return `${formatClock(iso)} UTC, ${formatDateShort(iso)}`
+  return `${formatClock(iso)} UTC · ${formatDateShort(iso)}`
+}
+
+export function nextDate(isoDate: string): string {
+  const d = utcDate(isoDate)
+  d.setUTCDate(d.getUTCDate() + 1)
+  return d.toISOString().slice(0, 10)
 }

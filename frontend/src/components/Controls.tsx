@@ -1,5 +1,7 @@
 import type { MetaResponse } from '../api/client'
-import { formatDateLong } from '../lib/format'
+import { DEFINITIONS } from '../lib/definitions'
+import { formatDateLong, nextDate } from '../lib/format'
+import { InfoTip } from './InfoTip'
 
 interface Props {
   meta: MetaResponse
@@ -9,19 +11,11 @@ interface Props {
   onCutoffChange: (value: string) => void
 }
 
-function addDay(isoDate: string): string {
-  const d = new Date(`${isoDate}T00:00:00Z`)
-  d.setUTCDate(d.getUTCDate() + 1)
-  return d.toISOString().slice(0, 10)
-}
-
 export function Controls({ meta, decisionDate, cutoff, onDecisionDateChange, onCutoffChange }: Props) {
-  const isDefaultCutoff = cutoff === meta.default_cutoff
-
   return (
-    <section className="controls" aria-label="Decision settings">
+    <section className="controls" aria-label="Filters">
       <label className="field">
-        <span className="field-label">Decision day</span>
+        <span className="field-label">Decision date</span>
         <input
           type="date"
           value={decisionDate}
@@ -31,32 +25,29 @@ export function Controls({ meta, decisionDate, cutoff, onDecisionDateChange, onC
           onChange={(e) => e.target.value && onDecisionDateChange(e.target.value)}
         />
       </label>
-      <label className="field">
-        <span className="field-label">Decision cutoff (UTC)</span>
+      <div className="field">
+        <span className="field-label">
+          <label htmlFor="gate-closure">Gate closure (UTC)</label>
+          <InfoTip text={DEFINITIONS.gateClosure} />
+        </span>
         <input
+          id="gate-closure"
           type="time"
           value={cutoff}
           step={60}
           required
           onChange={(e) => e.target.value && onCutoffChange(e.target.value.slice(0, 5))}
         />
-      </label>
-      <div className="field">
-        <span className="field-label">Delivery day</span>
-        <span className="field-static">{formatDateLong(addDay(decisionDate))}</span>
       </div>
-      <p className="controls-note">
-        {isDefaultCutoff ? (
-          <>Default cutoff {meta.default_cutoff} UTC matches GB day-ahead auction gate closure.</>
-        ) : (
-          <>
-            Custom cutoff.{' '}
-            <button type="button" className="link-button" onClick={() => onCutoffChange(meta.default_cutoff)}>
-              Reset to {meta.default_cutoff} gate closure
-            </button>
-          </>
-        )}
-      </p>
+      <div className="field">
+        <span className="field-label">Delivery date</span>
+        <span className="field-static">{formatDateLong(nextDate(decisionDate))}</span>
+      </div>
+      {cutoff !== meta.default_cutoff && (
+        <button type="button" className="secondary-button" onClick={() => onCutoffChange(meta.default_cutoff)}>
+          Reset to {meta.default_cutoff}
+        </button>
+      )}
     </section>
   )
 }

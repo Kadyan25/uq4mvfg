@@ -1,4 +1,4 @@
-import { formatClock, formatDateLong, formatGw, formatGwh, formatPct, formatPublished, formatSignedGw } from './format'
+import { formatClock, formatDateLong, formatGw, formatPct, formatPublished, formatSignedGw, nextDate } from './format'
 
 describe('format helpers', () => {
   it('formats megawatts as gigawatts', () => {
@@ -18,14 +18,18 @@ describe('format helpers', () => {
     expect(formatSignedGw(0)).toBe('0.0 GW')
   })
 
-  it('formats percentages and energy', () => {
+  it('formats percentages', () => {
     expect(formatPct(9.8586)).toBe('9.9%')
-    expect(formatGwh(254300)).toBe('254 GWh')
   })
 
   it('renders times and dates in UTC regardless of local zone', () => {
     expect(formatClock('2026-01-14T07:30:00Z')).toBe('07:30')
     expect(formatDateLong('2026-01-15')).toBe('Thu 15 Jan 2026')
-    expect(formatPublished('2026-01-14T07:30:00Z')).toBe('07:30 UTC, 14 Jan')
+    expect(formatPublished('2026-01-14T07:30:00Z')).toBe('07:30 UTC · 14 Jan')
+  })
+
+  it('rolls the delivery date across month ends', () => {
+    expect(nextDate('2026-01-14')).toBe('2026-01-15')
+    expect(nextDate('2026-01-31')).toBe('2026-02-01')
   })
 })
