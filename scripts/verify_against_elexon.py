@@ -20,6 +20,7 @@ FIRST_DECISION = datetime(2026, 1, 1)
 DAYS = 31
 CUTOFFS = ["09:20", "12:00", "05:00", "00:00", "23:59"]
 TOLERANCE = 1e-6
+MIN_HISTORY_DAYS = 3
 
 
 def get(url):
@@ -88,10 +89,78 @@ def check_raw_values(runs, halfhours):
     return 0 if ok else 1
 
 
+def pct(values, p):
+    ordered = sorted(values)
+    k = (len(ordered) - 1) * p / 100
+    low = int(k)
+    high = min(low + 1, len(ordered) - 1)
+    return ordered[low] + (ordered[high] - ordered[low]) * (k - low)
+
+
+def expected_plan(runs, halfhours, i, cutoff):
+    """History = delivery dates that ended before decision date i (decisions 0..i-2)."""
+    history = [expected_day(runs, halfhours, FIRST_DECISION + timedelta(days=j), cutoff)[1] for j in range(max(i - 1, 0))]
+    history = [errors for errors in history if errors]
+    if len(history) < MIN_HISTORY_DAYS:
+        return len(history), None
+    flat = [e for errors in history for e in errors]
+    return len(history), (pct(flat, 10), pct(flat, 50), pct(flat, 90))
+
+
+def check_planning(runs, halfhours, cutoff="09:20"):
+    failures, plan_errors, hits, checked = 0, [], 0, 0
+    for i in range(DAYS):
+        decision = FIRST_DECISION + timedelta(days=i)
+        day = get(f"{APP}/day?decision_date={decision.date()}&cutoff={cutoff}")
+        history_days, p = expected_plan(runs, halfhours, i, cutoff)
+        app_plan = day["plan"]
+        if day["history_days"] != history_days or (p is None) != (app_plan is None):
+            failures += 1
+            print(f"  MISMATCH plan presence {decision.date()}: app {day['history_days']} vs {history_days}")
+            continue
+        if p is None:
+            continue
+        app_p = (app_plan["p10_error_mw"], app_plan["p50_error_mw"], app_plan["p90_error_mw"])
+        if any(abs(a - b) > TOLERANCE for a, b in zip(app_p, p)):
+            failures += 1
+            print(f"  MISMATCH plan percentiles {decision.date()}: app {app_p} vs {p}")
+        for h in day["hourly"]:
+            plan_mw, low, high = max(h["forecast_mw"] - p[1], 0), max(h["forecast_mw"] - p[2], 0), max(h["forecast_mw"] - p[0], 0)
+            plan_errors.append(plan_mw - h["actual_mw"])
+            hits, checked = hits + (low <= h["actual_mw"] <= high), checked + 1
+    return failures, plan_errors, hits, checked
+
+
+def check_planning_summary(runs, halfhours):
+    failures, plan_errors, hits, checked = check_planning(runs, halfhours)
+    summary = get(f"{APP}/summary?cutoff=09:20")
+    mae = sum(abs(e) for e in plan_errors) / len(plan_errors)
+    hit_pct = hits / checked * 100
+    ok = abs(summary["plan_overall"]["mae_mw"] - mae) < TOLERANCE and abs(summary["plan_range_hit_pct"] - hit_pct) < TOLERANCE
+    failures += 0 if ok else 1
+    print(f"planning: plan MAE app={summary['plan_overall']['mae_mw']:.2f} independent={mae:.2f}, "
+          f"range hit app={summary['plan_range_hit_pct']:.1f}% independent={hit_pct:.1f}% -> {'OK' if failures == 0 else 'FAIL'}")
+    return failures
+
+
+def check_runs(runs, decision=datetime(2026, 1, 27), cutoff="09:20"):
+    body = get(f"{APP}/runs?decision_date={decision.date()}&cutoff={cutoff}")
+    delivery = decision + timedelta(days=1)
+    expected = sorted(p for p in runs if delivery - timedelta(days=2) <= p < delivery
+                      and any(delivery + timedelta(hours=h) in runs[p] for h in range(24)))
+    chosen = expected_day(runs, {}, decision, cutoff)[0]
+    app_runs = [ts(r["publish_time"]) for r in body["runs"]]
+    app_chosen = [ts(r["publish_time"]) for r in body["runs"] if r["is_decision_run"]]
+    ok = app_runs == expected and app_chosen == [chosen]
+    print(f"runs {delivery.date()}: {len(app_runs)} runs, decision run {app_chosen} -> {'OK' if ok else 'FAIL'}")
+    return 0 if ok else 1
+
+
 def main():
     print(f"Checking {APP} against raw Elexon data...")
     runs, halfhours = load_raw()
     failures = sum(check_cutoff(runs, halfhours, c) for c in CUTOFFS) + check_raw_values(runs, halfhours)
+    failures += check_planning_summary(runs, halfhours) + check_runs(runs)
     print("ALL CHECKS PASSED" if failures == 0 else f"{failures} FAILURE(S)")
     return 1 if failures else 0
 
