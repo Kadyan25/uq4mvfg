@@ -1,0 +1,4 @@
+# Runtime dependencies for the Vercel Python function (mirrors backend/pyproject.toml).
+fastapi==0.162.0
+httpx==0.28.1
+psycopg[binary]==3.3.6
