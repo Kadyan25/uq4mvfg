@@ -34,6 +34,7 @@ const summary: SummaryResponse = {
   error_percentiles: { p10_mw: -550, p50_mw: 1590, p90_mw: 4100 },
   by_forecast_level: [{ low_mw: 20000, high_mw: 25000, count: 43, mae_mw: 4562, bias_mw: 4562 }],
   plan_overall: { count: 648, mae_mw: 1420, rmse_mw: 1870, bias_mw: 320, wape_pct: 13 },
+  plan_baseline: { count: 648, mae_mw: 2070, rmse_mw: 2550, bias_mw: 1820, wape_pct: 19 },
   plan_range_hit_pct: 79.6,
 }
 
@@ -195,5 +196,16 @@ describe('App', () => {
 
     expect(await screen.findByText('Bias by forecast level')).toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'Forecast bias by forecast level' })).toBeInTheDocument()
+  })
+
+  it('compares the planning estimate with the forecast on the same hours', async () => {
+    mockApi()
+    render(<App />)
+
+    expect(await screen.findByText('Planning estimate vs forecast')).toBeInTheDocument()
+    expect(screen.getByText('vs 2.07 GW')).toBeInTheDocument()
+    expect(screen.getByText('31% lower')).toBeInTheDocument()
+    expect(screen.getByText('79.6%')).toBeInTheDocument()
+    expect(screen.getByText('1 date')).toBeInTheDocument()
   })
 })

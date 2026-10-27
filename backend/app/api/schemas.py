@@ -96,6 +96,7 @@ class SummaryResponse(BaseModel):
     error_percentiles: Percentiles | None
     by_forecast_level: list[LevelBucketRow]
     plan_overall: Metrics | None
+    plan_baseline: Metrics | None
     plan_range_hit_pct: float | None
 
 

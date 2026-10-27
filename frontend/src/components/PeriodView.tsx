@@ -6,6 +6,7 @@ import { ErrorBand } from './ErrorBand'
 import { ForecastLevelChart } from './ForecastLevelChart'
 import { InfoTip } from './InfoTip'
 import { KpiCard } from './KpiCard'
+import { PlanPerformance } from './PlanPerformance'
 
 interface Props {
   summary: SummaryResponse
@@ -25,6 +26,10 @@ export function PeriodView({ summary, selectedDecisionDate, onSelectDay }: Props
         <KpiCard label="Bias" value={formatSignedGw(o.bias_mw, 2)} info={DEFINITIONS.bias} />
         <KpiCard label="WAPE" value={formatPct(o.wape_pct)} info={DEFINITIONS.wape} />
       </div>
+      {summary.plan_overall && summary.plan_baseline && (
+        <PlanPerformance plan={summary.plan_overall} baseline={summary.plan_baseline}
+          rangeHitPct={summary.plan_range_hit_pct} planDays={summary.days.filter((d) => d.plan_metrics).length} />
+      )}
       <div className="grid-2">
         <div className="panel">
           <h3>MAE by delivery date</h3>

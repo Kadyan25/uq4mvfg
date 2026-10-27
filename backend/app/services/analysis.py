@@ -41,6 +41,8 @@ class PeriodSummary:
     percentiles: dict[float, float]
     by_forecast_level: list[LevelBucket]
     plan_overall: ErrorMetrics | None
+    # Forecast scored on exactly the hours that had a plan, so the two are directly comparable.
+    plan_baseline: ErrorMetrics | None
     plan_range_hit_pct: float | None
 
 
@@ -90,6 +92,7 @@ def analyse_period(
     summaries: list[DaySummary] = []
     all_hours: list[HourlyComparison] = []
     plan_hours: list[HourlyComparison] = []
+    baseline_hours: list[HourlyComparison] = []
     hits = checked = 0
     for decision_date, day in days.items():
         plan = _plan_for(day, _learnable(days, decision_date), config)
@@ -98,9 +101,10 @@ def analyse_period(
         all_hours.extend(day.hourly)
         if plan:
             plan_hours.extend(plan_comparisons(plan, day.hourly))
+            baseline_hours.extend(day.hourly)
             day_hits, day_checked = range_hits(plan, day.hourly)
             hits, checked = hits + day_hits, checked + day_checked
     return PeriodSummary(
         summaries, compute_metrics(all_hours), error_percentiles(all_hours), error_by_forecast_level(all_hours),
-        compute_metrics(plan_hours), (hits / checked * 100) if checked else None,
+        compute_metrics(plan_hours), compute_metrics(baseline_hours), (hits / checked * 100) if checked else None,
     )

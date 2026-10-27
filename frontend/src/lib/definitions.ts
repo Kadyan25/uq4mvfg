@@ -10,5 +10,6 @@ export const DEFINITIONS = {
   plan: 'Forecast shifted by its median hourly error on earlier completed delivery dates. The range uses the P10–P90 of those errors.',
   runs: 'Every WINDFOR run published in the two days before delivery. Shows how the forecast evolved and which run was available at gate closure.',
   byLevel: 'Average forecast − outturn, grouped by how much wind was forecast. Shows whether high-wind forecasts overshoot more.',
+  planPerformance: 'Planning estimate and raw forecast scored on the same hours: every delivery date with enough completed history at decision time.',
   distribution: 'Percentiles of hourly error (forecast − outturn) across all delivery dates.',
 } as const

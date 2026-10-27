@@ -85,6 +85,7 @@ export interface SummaryResponse {
   error_percentiles: { p10_mw: number; p50_mw: number; p90_mw: number } | null
   by_forecast_level: LevelBucket[]
   plan_overall: Metrics | null
+  plan_baseline: Metrics | null
   plan_range_hit_pct: number | null
 }
 

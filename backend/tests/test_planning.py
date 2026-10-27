@@ -109,5 +109,7 @@ def test_analyse_period_Should_ScorePlanOnlyForDaysWithEnoughHistory():
     with_plan = [d.decision_date for d in result.days if d.plan_metrics]
     assert with_plan == [date(2026, 1, 14)]
     assert result.plan_overall.mae_mw == pytest.approx(0)
+    assert result.plan_baseline.count == result.plan_overall.count == 24
+    assert result.plan_baseline.mae_mw == pytest.approx(100)
     assert result.plan_range_hit_pct == pytest.approx(100)
     assert result.overall.mae_mw == pytest.approx(100)

@@ -130,11 +130,18 @@ h1, h2, h3 { margin: 0; line-height: 1.25; }
 .swatch-actual { border-color: var(--actual); }
 .section .panel { margin-top: 12px; }
 
+.compare-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 10px 0 0; }
+.compare-grid div { display: flex; flex-direction: column; gap: 2px; background: var(--bg); border-radius: 8px; padding: 10px; }
+.compare-grid dt { font-size: 0.75rem; color: var(--muted); }
+.compare-grid dd { margin: 0; font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.compare-grid .vs { font-size: 0.8rem; font-weight: 400; color: var(--muted); }
+.section .panel + .grid-2 { margin-top: 12px; }
+
 .status, .empty { background: var(--surface); border: 1px dashed var(--border); border-radius: 12px; padding: 24px; color: var(--muted); text-align: center; }
 .status-error { color: var(--error); border-color: var(--error); }
 
 @media (max-width: 960px) {
-  .kpis { grid-template-columns: repeat(2, 1fr); }
+  .kpis, .compare-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 800px) {

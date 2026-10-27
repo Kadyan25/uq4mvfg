@@ -163,5 +163,6 @@ def _summary_response(result: PeriodSummary, cutoff: time) -> schemas.SummaryRes
         error_percentiles=schemas.Percentiles(p10_mw=pct[10], p50_mw=pct[50], p90_mw=pct[90]) if pct else None,
         by_forecast_level=[schemas.LevelBucketRow(**asdict(b)) for b in result.by_forecast_level],
         plan_overall=_metrics(result.plan_overall),
+        plan_baseline=_metrics(result.plan_baseline),
         plan_range_hit_pct=result.plan_range_hit_pct,
     )
