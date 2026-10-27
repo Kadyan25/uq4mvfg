@@ -9,6 +9,8 @@ class Settings:
     elexon_base_url: str
     http_timeout_s: float
     cache_ttl_s: int
+    # Optional Postgres for persisting fetched data across serverless cold starts.
+    database_url: str | None
     # The brief scopes the product to purchase decisions made in January 2026;
     # each decision on day D-1 is for delivery day D.
     first_decision_date: date = date(2026, 1, 1)
@@ -25,4 +27,5 @@ def get_settings() -> Settings:
         elexon_base_url=os.getenv("ELEXON_BASE_URL", "https://data.elexon.co.uk/bmrs/api/v1"),
         http_timeout_s=float(os.getenv("ELEXON_TIMEOUT_S", "60")),
         cache_ttl_s=int(os.getenv("CACHE_TTL_S", "21600")),
+        database_url=os.getenv("DATABASE_URL") or None,
     )

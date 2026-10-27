@@ -10,6 +10,7 @@ from app.api import schemas
 from app.config import Settings, get_settings
 from app.elexon.client import ElexonClient, ElexonError
 from app.elexon.repository import WindDataRepository
+from app.elexon.store import PostgresStore
 from app.services.analysis import DayAnalysis, PeriodSummary, PlanningConfig, analyse_day, analyse_period
 from app.services.forecast import decision_cutoff, runs_for_delivery, select_decision_forecast
 from app.services.metrics import ErrorMetrics
@@ -25,7 +26,8 @@ CutoffParam = Annotated[str | None, Query(pattern=CUTOFF_PATTERN, description="H
 @lru_cache
 def get_repository() -> WindDataRepository:
     settings = get_settings()
-    return WindDataRepository(ElexonClient(settings.elexon_base_url, settings.http_timeout_s), settings)
+    store = PostgresStore(settings.database_url) if settings.database_url else None
+    return WindDataRepository(ElexonClient(settings.elexon_base_url, settings.http_timeout_s), settings, store)
 
 
 Repo = Annotated[WindDataRepository, Depends(get_repository)]
@@ -98,7 +100,7 @@ def _resolve_cutoff(cutoff: str | None, settings: Settings) -> time:
 
 def _load(repo: WindDataRepository):
     try:
-        return repo.forecasts(), repo.actuals()
+        return repo.both()
     except ElexonError:
         logger.exception("Elexon fetch failed")
         raise HTTPException(502, "Upstream data source is unavailable, please retry shortly")

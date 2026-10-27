@@ -21,6 +21,9 @@ class FakeRepository:
     def actuals(self):
         return self._actuals
 
+    def both(self):
+        return self.forecasts(), self.actuals()
+
 
 def sample_repository() -> FakeRepository:
     forecasts = (

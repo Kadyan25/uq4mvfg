@@ -15,8 +15,7 @@ logger = logging.getLogger(__name__)
 def warm_cache(repo: WindDataRepository) -> None:
     # Best effort: if Elexon is down at boot, requests will retry the fetch themselves.
     try:
-        repo.forecasts()
-        repo.actuals()
+        repo.both()
         logger.info("Elexon data cache warmed")
     except Exception:
         logger.exception("Cache warm-up failed; will fetch on first request")

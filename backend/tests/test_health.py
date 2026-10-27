@@ -16,14 +16,11 @@ def test_warm_cache_Should_LoadBothDatasets():
 
     warm_cache(repo)
 
-    repo.forecasts.assert_called_once()
-    repo.actuals.assert_called_once()
+    repo.both.assert_called_once()
 
 
 def test_warm_cache_Should_NotRaise_When_FetchFails():
     repo = MagicMock()
-    repo.forecasts.side_effect = RuntimeError("elexon down")
+    repo.both.side_effect = RuntimeError("elexon down")
 
-    warm_cache(repo)
-
-    repo.actuals.assert_not_called()
+    warm_cache(repo)  # must not raise
