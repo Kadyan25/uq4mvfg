@@ -7,5 +7,6 @@ export const DEFINITIONS = {
   rmse: 'Root mean square error: like MAE but weights large misses more heavily.',
   bias: 'Mean of forecast − outturn. Positive = over-forecast (less wind than forecast).',
   wape: 'Weighted absolute percentage error: total absolute error ÷ total outturn.',
+  plan: 'Forecast shifted by its median hourly error on earlier completed delivery dates. The range uses the P10–P90 of those errors.',
   distribution: 'Percentiles of hourly error (forecast − outturn) across all delivery dates.',
 } as const

@@ -25,7 +25,7 @@ function Dashboard({ meta }: { meta: MetaResponse }) {
 
       <section className="section" aria-labelledby="day-title">
         <h2 id="day-title">Forecast vs outturn</h2>
-        {day.status === 'success' ? <DayView day={day.data} /> : <Status state={day} />}
+        {day.status === 'success' ? <DayView day={day.data} minHistoryDays={meta.min_history_days} /> : <Status state={day} />}
       </section>
 
       <section className="section" aria-labelledby="period-title">

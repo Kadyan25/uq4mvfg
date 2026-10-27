@@ -22,7 +22,7 @@ const day: DayResponse = {
     p10_error_mw: -500,
     p50_error_mw: 1500,
     p90_error_mw: 4000,
-    hours: [{ time: '2026-01-02T00:00:00Z', plan_mw: 9500, low_mw: 7000, high_mw: 11500 }],
+    hours: [{ time: '2026-01-02T00:00:00Z', plan_mw: 9000, low_mw: 7000, high_mw: 12000 }],
   },
   plan_metrics: { count: 1, mae_mw: 500, rmse_mw: 500, bias_mw: -500, wape_pct: 5 },
 }
@@ -124,5 +124,47 @@ describe('App', () => {
     await userEvent.click(screen.getByRole('button', { name: /Reset to 09:20/ }))
     expect(input).toHaveValue('09:20')
     expect(screen.queryByRole('button', { name: /Reset to/ })).not.toBeInTheDocument()
+  })
+
+  it('shows the planning estimate with its range and caveat', async () => {
+    mockApi()
+    render(<App />)
+
+    expect(await screen.findByText('Wind to plan for')).toBeInTheDocument()
+    expect(screen.getByText('9 GWh')).toBeInTheDocument()
+    expect(screen.getByText('Range 7 GWh – 12 GWh (P10–P90)')).toBeInTheDocument()
+    expect(screen.getByText(/Forecast 11 GWh · adjusted −2 GWh from 5 prior days/)).toBeInTheDocument()
+    expect(screen.getByText(/Indicative only/)).toBeInTheDocument()
+  })
+
+  it('turns expected demand into a suggested purchase range', async () => {
+    mockApi()
+    render(<App />)
+    const input = await screen.findByLabelText('Expected demand (GWh)')
+
+    await userEvent.type(input, '100')
+
+    expect(screen.getByText('Suggested purchase')).toBeInTheDocument()
+    expect(screen.getByText('91 GWh')).toBeInTheDocument()
+    expect(screen.getByText('Range 88 GWh – 93 GWh')).toBeInTheDocument()
+  })
+
+  it('rejects an implausible demand instead of computing a purchase', async () => {
+    mockApi()
+    render(<App />)
+    const input = await screen.findByLabelText('Expected demand (GWh)')
+
+    await userEvent.type(input, '99999')
+
+    expect(screen.getByText(/Enter a demand between 0 and 5000 GWh/)).toBeInTheDocument()
+    expect(screen.queryByText('Suggested purchase')).not.toBeInTheDocument()
+  })
+
+  it('explains when there is not enough history for a plan', async () => {
+    mockApi({ day: () => json({ ...day, history_days: 1, plan: null, plan_metrics: null }) })
+    render(<App />)
+
+    expect(await screen.findByText('Not enough history yet: needs 3 completed delivery dates, has 1.')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Expected demand (GWh)')).not.toBeInTheDocument()
   })
 })

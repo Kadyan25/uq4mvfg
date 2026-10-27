@@ -3,9 +3,11 @@ import { DEFINITIONS } from '../lib/definitions'
 import { formatGw, formatPct, formatPublished, formatSignedGw } from '../lib/format'
 import { ForecastChart } from './ForecastChart'
 import { KpiCard } from './KpiCard'
+import { PlanningCard } from './PlanningCard'
 
 interface Props {
   day: DayResponse
+  minHistoryDays: number
 }
 
 function biasLabel(bias: number): string {
@@ -14,7 +16,7 @@ function biasLabel(bias: number): string {
   return 'Unbiased'
 }
 
-export function DayView({ day }: Props) {
+export function DayView({ day, minHistoryDays }: Props) {
   if (!day.forecast_publish_time) {
     return <p className="empty">No forecast published before {day.cutoff.slice(11, 16)} UTC.</p>
   }
@@ -36,6 +38,8 @@ export function DayView({ day }: Props) {
           info={DEFINITIONS.bias} />
       </div>
       <ForecastChart forecast={day.forecast} actuals={day.actuals} plan={day.plan?.hours} />
+      {/* Keyed by date so a demand typed for one delivery date is never carried to another. */}
+      <PlanningCard key={day.delivery_date} day={day} minHistoryDays={minHistoryDays} />
     </>
   )
 }

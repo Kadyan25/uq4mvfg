@@ -109,6 +109,17 @@ h1, h2, h3 { margin: 0; line-height: 1.25; }
 .band-grid dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
 .band-note { margin: 12px 0 0; font-size: 0.8rem; color: var(--muted); }
 
+.planning { margin-top: 12px; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--plan); border-radius: 12px; padding: 16px; }
+.planning h3 { display: flex; align-items: center; gap: 6px; font-size: 1rem; margin-bottom: 10px; }
+.planning-empty p { margin: 0; color: var(--muted); }
+.planning-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; }
+.planning-main, .planning-purchase { display: flex; flex-direction: column; gap: 2px; }
+.planning-demand { display: flex; flex-direction: column; gap: 10px; }
+.planning-value { font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.planning-caveat { margin: 14px 0 0; padding-top: 10px; border-top: 1px solid var(--border); font-size: 0.8rem; color: var(--muted); }
+.field input[aria-invalid="true"] { border-color: var(--error); }
+.field-error { font-size: 0.8rem; color: var(--error); }
+
 .status, .empty { background: var(--surface); border: 1px dashed var(--border); border-radius: 12px; padding: 24px; color: var(--muted); text-align: center; }
 .status-error { color: var(--error); border-color: var(--error); }
 
@@ -117,7 +128,7 @@ h1, h2, h3 { margin: 0; line-height: 1.25; }
 }
 
 @media (max-width: 800px) {
-  .grid-2 { grid-template-columns: 1fr; }
+  .grid-2, .planning-grid { grid-template-columns: 1fr; }
   .controls { position: static; }
 }
 
