@@ -48,6 +48,20 @@ export interface DayResponse {
   plan_metrics: Metrics | null
 }
 
+export interface ForecastRun {
+  publish_time: string
+  after_cutoff: boolean
+  is_decision_run: boolean
+  points: SeriesPoint[]
+}
+
+export interface RunsResponse {
+  decision_date: string
+  delivery_date: string
+  cutoff: string
+  runs: ForecastRun[]
+}
+
 export interface DaySummaryRow {
   decision_date: string
   delivery_date: string
@@ -90,5 +104,7 @@ export const api = {
   meta: (signal?: AbortSignal) => getJson<MetaResponse>('/api/meta', {}, signal),
   day: (decisionDate: string, cutoff: string, signal?: AbortSignal) =>
     getJson<DayResponse>('/api/day', { decision_date: decisionDate, cutoff }, signal),
+  runs: (decisionDate: string, cutoff: string, signal?: AbortSignal) =>
+    getJson<RunsResponse>('/api/runs', { decision_date: decisionDate, cutoff }, signal),
   summary: (cutoff: string, signal?: AbortSignal) => getJson<SummaryResponse>('/api/summary', { cutoff }, signal),
 }

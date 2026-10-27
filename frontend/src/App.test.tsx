@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { vi } from 'vitest'
 import App from './App'
-import type { DayResponse, SummaryResponse } from './api/client'
+import type { DayResponse, RunsResponse, SummaryResponse } from './api/client'
 
 const meta = { first_decision_date: '2026-01-01', last_decision_date: '2026-01-31', default_cutoff: '09:20', min_history_days: 3 }
 
@@ -37,6 +37,17 @@ const summary: SummaryResponse = {
   plan_range_hit_pct: 79.6,
 }
 
+const runs: RunsResponse = {
+  decision_date: '2026-01-01',
+  delivery_date: '2026-01-02',
+  cutoff: '2026-01-01T09:20:00Z',
+  runs: [
+    { publish_time: '2026-01-01T04:30:00Z', after_cutoff: false, is_decision_run: false, points: [{ time: '2026-01-02T00:00:00Z', mw: 12000 }] },
+    { publish_time: '2026-01-01T07:30:00Z', after_cutoff: false, is_decision_run: true, points: [{ time: '2026-01-02T00:00:00Z', mw: 11000 }] },
+    { publish_time: '2026-01-01T09:30:00Z', after_cutoff: true, is_decision_run: false, points: [{ time: '2026-01-02T00:00:00Z', mw: 10500 }] },
+  ],
+}
+
 function json(body: unknown, status = 200) {
   return Promise.resolve(new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } }))
 }
@@ -47,6 +58,7 @@ function mockApi(overrides: { day?: () => Promise<Response> } = {}) {
     if (url.startsWith('/api/meta')) return json(meta)
     if (url.startsWith('/api/day')) return overrides.day ? overrides.day() : json(day)
     if (url.startsWith('/api/summary')) return json(summary)
+    if (url.startsWith('/api/runs')) return json(runs)
     return json({ detail: 'not found' }, 404)
   })
   vi.stubGlobal('fetch', fetchMock)
@@ -166,5 +178,14 @@ describe('App', () => {
 
     expect(await screen.findByText('Not enough history yet: needs 3 completed delivery dates, has 1.')).toBeInTheDocument()
     expect(screen.queryByLabelText('Expected demand (GWh)')).not.toBeInTheDocument()
+  })
+
+  it('shows forecast runs with the gate-closure run identified', async () => {
+    mockApi()
+    render(<App />)
+
+    expect(await screen.findByText('Forecast runs for this delivery date')).toBeInTheDocument()
+    expect(screen.getByText(/Used at gate closure \(07:30 UTC · 1 Jan\)/)).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: '3 forecast runs for 2026-01-02 compared with outturn' })).toBeInTheDocument()
   })
 })

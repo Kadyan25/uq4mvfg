@@ -53,6 +53,20 @@ class DayResponse(BaseModel):
     plan_metrics: Metrics | None
 
 
+class ForecastRunRow(BaseModel):
+    publish_time: datetime
+    after_cutoff: bool
+    is_decision_run: bool
+    points: list[SeriesPoint]
+
+
+class RunsResponse(BaseModel):
+    decision_date: date
+    delivery_date: date
+    cutoff: datetime
+    runs: list[ForecastRunRow]
+
+
 class DaySummaryRow(BaseModel):
     decision_date: date
     delivery_date: date

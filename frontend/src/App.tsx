@@ -4,6 +4,7 @@ import type { MetaResponse } from './api/client'
 import { Controls } from './components/Controls'
 import { DayView } from './components/DayView'
 import { PeriodView } from './components/PeriodView'
+import { RunsChart } from './components/RunsChart'
 import { useAsync } from './hooks/useAsync'
 
 function Status({ state }: { state: { status: string; error?: string } }) {
@@ -17,6 +18,7 @@ function Dashboard({ meta }: { meta: MetaResponse }) {
   const [cutoff, setCutoff] = useState(meta.default_cutoff)
   const day = useAsync((signal) => api.day(decisionDate, cutoff, signal), [decisionDate, cutoff])
   const summary = useAsync((signal) => api.summary(cutoff, signal), [cutoff])
+  const runs = useAsync((signal) => api.runs(decisionDate, cutoff, signal), [decisionDate, cutoff])
 
   return (
     <>
@@ -26,6 +28,9 @@ function Dashboard({ meta }: { meta: MetaResponse }) {
       <section className="section" aria-labelledby="day-title">
         <h2 id="day-title">Forecast vs outturn</h2>
         {day.status === 'success' ? <DayView day={day.data} minHistoryDays={meta.min_history_days} /> : <Status state={day} />}
+        {day.status === 'success' && runs.status === 'success' && runs.data.runs.length > 0 && (
+          <RunsChart runs={runs.data} actuals={day.data.actuals} />
+        )}
       </section>
 
       <section className="section" aria-labelledby="period-title">

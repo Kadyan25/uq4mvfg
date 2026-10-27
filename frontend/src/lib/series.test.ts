@@ -1,4 +1,4 @@
-import { mergeSeries } from './series'
+import { mergeRuns, mergeSeries } from './series'
 
 describe('mergeSeries', () => {
   it('joins hourly forecast and half-hourly actuals on one sorted time axis', () => {
@@ -33,5 +33,22 @@ describe('mergeSeries', () => {
 
   it('returns an empty list when there is no data', () => {
     expect(mergeSeries([], [])).toEqual([])
+  })
+})
+
+describe('mergeRuns', () => {
+  it('gives each run its own column and keeps outturn alongside', () => {
+    const rows = mergeRuns(
+      [
+        { publish_time: 'a', after_cutoff: false, is_decision_run: false, points: [{ time: '2026-01-15T00:00:00Z', mw: 1000 }] },
+        { publish_time: 'b', after_cutoff: false, is_decision_run: true, points: [{ time: '2026-01-15T00:00:00Z', mw: 1200 }] },
+      ],
+      [{ time: '2026-01-15T00:30:00Z', mw: 900 }],
+    )
+
+    expect(rows).toEqual([
+      { t: Date.parse('2026-01-15T00:00:00Z'), run0: 1000, run1: 1200 },
+      { t: Date.parse('2026-01-15T00:30:00Z'), actual: 900 },
+    ])
   })
 })

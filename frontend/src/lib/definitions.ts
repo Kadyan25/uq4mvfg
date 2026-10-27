@@ -8,5 +8,6 @@ export const DEFINITIONS = {
   bias: 'Mean of forecast − outturn. Positive = over-forecast (less wind than forecast).',
   wape: 'Weighted absolute percentage error: total absolute error ÷ total outturn.',
   plan: 'Forecast shifted by its median hourly error on earlier completed delivery dates. The range uses the P10–P90 of those errors.',
+  runs: 'Every WINDFOR run published in the two days before delivery. Shows how the forecast evolved and which run was available at gate closure.',
   distribution: 'Percentiles of hourly error (forecast − outturn) across all delivery dates.',
 } as const

@@ -100,6 +100,25 @@ def test_day_Should_Reject_When_DateMissingOrInvalid(client):
     assert client.get("/api/day", params={"decision_date": "not-a-date"}).status_code == 422
 
 
+def test_runs_Should_FlagDecisionRunAndRunsAfterCutoff(client):
+    body = client.get("/api/runs", params={"decision_date": "2026-01-14"}).json()
+
+    assert body["delivery_date"] == "2026-01-15"
+    assert body["cutoff"] == "2026-01-14T09:20:00Z"
+    flags = [(r["publish_time"], r["after_cutoff"], r["is_decision_run"]) for r in body["runs"]]
+    assert flags == [
+        ("2026-01-14T04:30:00Z", False, False),
+        ("2026-01-14T07:30:00Z", False, True),
+        ("2026-01-14T09:30:00Z", True, False),
+    ]
+    assert len(body["runs"][0]["points"]) == 24
+
+
+def test_runs_Should_Reject_When_DateOutsideScope(client):
+    assert client.get("/api/runs", params={"decision_date": "2026-02-01"}).status_code == 422
+    assert client.get("/api/runs", params={"decision_date": "2026-01-14", "cutoff": "25:00"}).status_code == 422
+
+
 def test_summary_Should_CoverEveryDecisionDayInScope(client):
     body = client.get("/api/summary").json()
 

@@ -11,6 +11,7 @@ from app.config import Settings, get_settings
 from app.elexon.client import ElexonClient, ElexonError
 from app.elexon.repository import WindDataRepository
 from app.services.analysis import DayAnalysis, PeriodSummary, PlanningConfig, analyse_day, analyse_period
+from app.services.forecast import decision_cutoff, runs_for_delivery, select_decision_forecast
 from app.services.metrics import ErrorMetrics
 from app.services.planning import PlanningEstimate
 
@@ -43,11 +44,34 @@ def meta(settings: Config) -> schemas.MetaResponse:
 
 @router.get("/day", response_model=schemas.DayResponse)
 def day(decision_date: date, repo: Repo, settings: Config, cutoff: CutoffParam = None) -> schemas.DayResponse:
-    if not settings.first_decision_date <= decision_date <= settings.last_decision_date:
-        raise HTTPException(422, "decision_date is outside the supported range")
+    _check_in_scope(decision_date, settings)
     cutoff_time = _resolve_cutoff(cutoff, settings)
     forecasts, actuals = _load(repo)
     return _day_response(analyse_day(forecasts, actuals, decision_date, cutoff_time, _planning(settings)))
+
+
+@router.get("/runs", response_model=schemas.RunsResponse)
+def runs(decision_date: date, repo: Repo, settings: Config, cutoff: CutoffParam = None) -> schemas.RunsResponse:
+    _check_in_scope(decision_date, settings)
+    cutoff_time = _resolve_cutoff(cutoff, settings)
+    forecasts, _ = _load(repo)
+    cutoff_at = decision_cutoff(decision_date, cutoff_time)
+    chosen = select_decision_forecast(forecasts, decision_date, cutoff_time).publish_time
+    delivery_date = decision_date + timedelta(days=1)
+    return schemas.RunsResponse(
+        decision_date=decision_date,
+        delivery_date=delivery_date,
+        cutoff=cutoff_at,
+        runs=[
+            schemas.ForecastRunRow(
+                publish_time=r.publish_time,
+                after_cutoff=r.publish_time > cutoff_at,
+                is_decision_run=r.publish_time == chosen,
+                points=[schemas.SeriesPoint(time=p.start_time, mw=p.generation_mw) for p in r.points],
+            )
+            for r in runs_for_delivery(forecasts, delivery_date)
+        ],
+    )
 
 
 @router.get("/summary", response_model=schemas.SummaryResponse)
@@ -57,6 +81,11 @@ def summary(repo: Repo, settings: Config, cutoff: CutoffParam = None) -> schemas
     dates = [settings.first_decision_date + timedelta(days=i) for i in range(span + 1)]
     forecasts, actuals = _load(repo)
     return _summary_response(analyse_period(forecasts, actuals, dates, cutoff_time, _planning(settings)), cutoff_time)
+
+
+def _check_in_scope(decision_date: date, settings: Settings) -> None:
+    if not settings.first_decision_date <= decision_date <= settings.last_decision_date:
+        raise HTTPException(422, "decision_date is outside the supported range")
 
 
 def _planning(settings: Settings) -> PlanningConfig:

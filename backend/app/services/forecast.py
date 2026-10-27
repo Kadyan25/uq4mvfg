@@ -13,6 +13,26 @@ class DecisionForecast:
     points: list[ForecastPoint]
 
 
+@dataclass(frozen=True)
+class ForecastRun:
+    publish_time: datetime
+    points: list[ForecastPoint]
+
+
+def runs_for_delivery(forecasts: list[ForecastPoint], delivery_date: date, lookback_days: int = 2) -> list[ForecastRun]:
+    """Every run published in the `lookback_days` before delivery starts, clipped to the delivery date."""
+    day_start, day_end = delivery_window(delivery_date)
+    earliest = day_start - timedelta(days=lookback_days)
+    by_run: dict[datetime, list[ForecastPoint]] = {}
+    for p in forecasts:
+        if earliest <= p.publish_time < day_start and day_start <= p.start_time < day_end:
+            by_run.setdefault(p.publish_time, []).append(p)
+    return [
+        ForecastRun(published, sorted(points, key=lambda p: p.start_time))
+        for published, points in sorted(by_run.items())
+    ]
+
+
 def decision_cutoff(decision_date: date, cutoff: time) -> datetime:
     return datetime.combine(decision_date, cutoff, timezone.utc)
 

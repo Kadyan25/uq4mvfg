@@ -1,6 +1,6 @@
 from datetime import date, time
 
-from app.services.forecast import decision_cutoff, select_decision_forecast
+from app.services.forecast import decision_cutoff, runs_for_delivery, select_decision_forecast
 from tests.factories import run, utc
 
 DECISION = date(2026, 1, 14)
@@ -90,6 +90,34 @@ def test_select_Should_SortPoints_When_InputUnordered():
     result = select_decision_forecast(list(reversed(points)), DECISION, CUTOFF)
 
     assert [p.start_time.hour for p in result.points] == list(range(24))
+
+
+def test_runs_for_delivery_Should_ReturnRunsPublishedInLookbackBeforeDeliveryStarts():
+    forecasts = (
+        run(utc(2026, 1, 12, 22, 30), DELIVERY)  # before the 2-day lookback
+        + run(utc(2026, 1, 13, 2, 30), DELIVERY)
+        + run(utc(2026, 1, 14, 22, 30), DELIVERY)
+        + run(utc(2026, 1, 15, 2, 30), DELIVERY)  # published during delivery: excluded
+    )
+
+    runs = runs_for_delivery(forecasts, date(2026, 1, 15))
+
+    assert [r.publish_time for r in runs] == [utc(2026, 1, 13, 2, 30), utc(2026, 1, 14, 22, 30)]
+    assert all(len(r.points) == 24 for r in runs)
+
+
+def test_runs_for_delivery_Should_ClipPointsToDeliveryDateAndSort():
+    publish = utc(2026, 1, 14, 7, 30)
+    forecasts = list(reversed(run(publish, (2026, 1, 14)) + run(publish, DELIVERY, hours=range(20))))
+
+    runs = runs_for_delivery(forecasts, date(2026, 1, 15))
+
+    assert len(runs) == 1
+    assert [p.start_time.hour for p in runs[0].points] == list(range(20))
+
+
+def test_runs_for_delivery_Should_ReturnEmpty_When_NoRuns():
+    assert runs_for_delivery([], date(2026, 1, 15)) == []
 
 
 def test_decision_cutoff_Should_CombineDecisionDateAndTimeInUtc():

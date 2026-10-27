@@ -120,6 +120,16 @@ h1, h2, h3 { margin: 0; line-height: 1.25; }
 .field input[aria-invalid="true"] { border-color: var(--error); }
 .field-error { font-size: 0.8rem; color: var(--error); }
 
+.chart-flat { border: 0; padding: 0; margin-top: 8px; }
+.runs-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 6px 0 0; padding: 0; list-style: none; font-size: 0.8rem; color: var(--muted); }
+.runs-legend li { display: inline-flex; align-items: center; gap: 6px; }
+.swatch { display: inline-block; width: 18px; height: 0; border-top: 2px solid; }
+.swatch-decision { border-color: var(--forecast); border-top-width: 3px; }
+.swatch-earlier { border-color: var(--bar); }
+.swatch-later { border-color: var(--muted); border-top-style: dashed; }
+.swatch-actual { border-color: var(--actual); }
+.section .panel { margin-top: 12px; }
+
 .status, .empty { background: var(--surface); border: 1px dashed var(--border); border-radius: 12px; padding: 24px; color: var(--muted); text-align: center; }
 .status-error { color: var(--error); border-color: var(--error); }
 
