@@ -3,7 +3,7 @@ import math
 import pytest
 
 from app.services.align import HourlyComparison
-from app.services.metrics import compute_metrics, error_percentiles, mae_by_hour, percentile
+from app.services.metrics import LevelBucket, compute_metrics, error_by_forecast_level, error_percentiles, percentile
 from tests.factories import utc
 
 
@@ -71,11 +71,24 @@ def test_error_percentiles_Should_ReturnEmpty_When_NoRows():
     assert error_percentiles([]) == {}
 
 
-def test_mae_by_hour_Should_GroupAbsoluteErrorsByHourOfDay():
+def test_error_by_forecast_level_Should_BucketByForecastAndReportBiasAndMae():
     rows = [
-        HourlyComparison(utc(2026, 1, 15, 5), 1100, 1000),
-        HourlyComparison(utc(2026, 1, 16, 5), 700, 1000),
-        HourlyComparison(utc(2026, 1, 15, 2), 1000, 1050),
+        HourlyComparison(utc(2026, 1, 15, 0), 3000, 2800),     # 0–5 GW, +200
+        HourlyComparison(utc(2026, 1, 15, 1), 4999, 5199),     # 0–5 GW, −200
+        HourlyComparison(utc(2026, 1, 15, 2), 21000, 17000),   # 20–25 GW, +4000
     ]
 
-    assert mae_by_hour(rows) == {2: 50, 5: 200}
+    assert error_by_forecast_level(rows) == [
+        LevelBucket(0, 5000, 2, 200, 0),
+        LevelBucket(20000, 25000, 1, 4000, 4000),
+    ]
+
+
+def test_error_by_forecast_level_Should_PutBoundaryValueInUpperBucket():
+    rows = [HourlyComparison(utc(2026, 1, 15, 0), 5000, 4000)]
+
+    assert error_by_forecast_level(rows)[0].low_mw == 5000
+
+
+def test_error_by_forecast_level_Should_ReturnEmpty_When_NoRows():
+    assert error_by_forecast_level([]) == []

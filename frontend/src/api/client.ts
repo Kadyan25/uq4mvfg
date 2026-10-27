@@ -70,12 +70,20 @@ export interface DaySummaryRow {
   plan_metrics: Metrics | null
 }
 
+export interface LevelBucket {
+  low_mw: number
+  high_mw: number
+  count: number
+  mae_mw: number
+  bias_mw: number
+}
+
 export interface SummaryResponse {
   cutoff: string
   days: DaySummaryRow[]
   overall: Metrics | null
   error_percentiles: { p10_mw: number; p50_mw: number; p90_mw: number } | null
-  mae_by_hour: { hour: number; mae_mw: number }[]
+  by_forecast_level: LevelBucket[]
   plan_overall: Metrics | null
   plan_range_hit_pct: number | null
 }

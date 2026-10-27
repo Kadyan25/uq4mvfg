@@ -54,7 +54,7 @@ def test_analyse_period_Should_AggregateAcrossAllDays():
     assert result.overall.mae_mw == pytest.approx(200)
     assert result.overall.bias_mw == pytest.approx(-100)
     assert result.percentiles[50] == pytest.approx(-100)
-    assert set(result.mae_by_hour) == set(range(24))
+    assert [(b.low_mw, b.count) for b in result.by_forecast_level] == [(0, 48)]
 
 
 def test_analyse_period_Should_KeepDayWithNoData_When_ForecastMissing():
@@ -73,4 +73,4 @@ def test_analyse_period_Should_ReturnEmptyAggregates_When_NoData():
 
     assert result.overall is None
     assert result.percentiles == {}
-    assert result.mae_by_hour == {}
+    assert result.by_forecast_level == []

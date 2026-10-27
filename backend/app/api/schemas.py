@@ -81,9 +81,12 @@ class Percentiles(BaseModel):
     p90_mw: float
 
 
-class HourOfDayError(BaseModel):
-    hour: int
+class LevelBucketRow(BaseModel):
+    low_mw: float
+    high_mw: float
+    count: int
     mae_mw: float
+    bias_mw: float
 
 
 class SummaryResponse(BaseModel):
@@ -91,7 +94,7 @@ class SummaryResponse(BaseModel):
     days: list[DaySummaryRow]
     overall: Metrics | None
     error_percentiles: Percentiles | None
-    mae_by_hour: list[HourOfDayError]
+    by_forecast_level: list[LevelBucketRow]
     plan_overall: Metrics | None
     plan_range_hit_pct: float | None
 

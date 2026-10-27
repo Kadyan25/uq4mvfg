@@ -4,7 +4,7 @@ from datetime import date, datetime, time, timedelta
 from app.elexon.models import ActualPoint, ForecastPoint
 from app.services.align import HourlyComparison, compare
 from app.services.forecast import DecisionForecast, delivery_window, select_decision_forecast
-from app.services.metrics import ErrorMetrics, compute_metrics, error_percentiles, mae_by_hour
+from app.services.metrics import ErrorMetrics, LevelBucket, compute_metrics, error_by_forecast_level, error_percentiles
 from app.services.planning import PlanningEstimate, build_plan, plan_comparisons, plan_metrics, range_hits
 
 
@@ -39,7 +39,7 @@ class PeriodSummary:
     days: list[DaySummary]
     overall: ErrorMetrics | None
     percentiles: dict[float, float]
-    mae_by_hour: dict[int, float]
+    by_forecast_level: list[LevelBucket]
     plan_overall: ErrorMetrics | None
     plan_range_hit_pct: float | None
 
@@ -101,6 +101,6 @@ def analyse_period(
             day_hits, day_checked = range_hits(plan, day.hourly)
             hits, checked = hits + day_hits, checked + day_checked
     return PeriodSummary(
-        summaries, compute_metrics(all_hours), error_percentiles(all_hours), mae_by_hour(all_hours),
+        summaries, compute_metrics(all_hours), error_percentiles(all_hours), error_by_forecast_level(all_hours),
         compute_metrics(plan_hours), (hits / checked * 100) if checked else None,
     )

@@ -130,7 +130,9 @@ def test_summary_Should_CoverEveryDecisionDayInScope(client):
     assert day14["metrics"]["mae_mw"] == pytest.approx(100)
     assert body["overall"]["count"] == 24
     assert body["error_percentiles"]["p50_mw"] == pytest.approx(100)
-    assert len(body["mae_by_hour"]) == 24
+    assert body["by_forecast_level"] == [
+        {"low_mw": 0.0, "high_mw": 5000.0, "count": 24, "mae_mw": pytest.approx(100), "bias_mw": pytest.approx(100)}
+    ]
 
 
 def test_summary_Should_ReturnNullAggregates_When_NoData():
@@ -142,7 +144,7 @@ def test_summary_Should_ReturnNullAggregates_When_NoData():
 
     assert body["overall"] is None
     assert body["error_percentiles"] is None
-    assert body["mae_by_hour"] == []
+    assert body["by_forecast_level"] == []
 
 
 def test_routes_Should_Return502WithGenericMessage_When_ElexonFails():

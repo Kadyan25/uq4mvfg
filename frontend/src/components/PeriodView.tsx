@@ -3,7 +3,8 @@ import { DEFINITIONS } from '../lib/definitions'
 import { formatGw, formatPct, formatSignedGw } from '../lib/format'
 import { DailyErrorChart } from './DailyErrorChart'
 import { ErrorBand } from './ErrorBand'
-import { HourOfDayChart } from './HourOfDayChart'
+import { ForecastLevelChart } from './ForecastLevelChart'
+import { InfoTip } from './InfoTip'
 import { KpiCard } from './KpiCard'
 
 interface Props {
@@ -35,8 +36,11 @@ export function PeriodView({ summary, selectedDecisionDate, onSelectDay }: Props
         )}
       </div>
       <div className="panel">
-        <h3>MAE by hour (UTC)</h3>
-        <HourOfDayChart rows={summary.mae_by_hour} />
+        <h3>
+          Bias by forecast level
+          <InfoTip text={DEFINITIONS.byLevel} />
+        </h3>
+        <ForecastLevelChart buckets={summary.by_forecast_level} />
       </div>
     </>
   )

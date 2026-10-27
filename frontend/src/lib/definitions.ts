@@ -9,5 +9,6 @@ export const DEFINITIONS = {
   wape: 'Weighted absolute percentage error: total absolute error ÷ total outturn.',
   plan: 'Forecast shifted by its median hourly error on earlier completed delivery dates. The range uses the P10–P90 of those errors.',
   runs: 'Every WINDFOR run published in the two days before delivery. Shows how the forecast evolved and which run was available at gate closure.',
+  byLevel: 'Average forecast − outturn, grouped by how much wind was forecast. Shows whether high-wind forecasts overshoot more.',
   distribution: 'Percentiles of hourly error (forecast − outturn) across all delivery dates.',
 } as const

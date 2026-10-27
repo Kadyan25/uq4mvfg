@@ -32,7 +32,7 @@ const summary: SummaryResponse = {
   days: [{ decision_date: '2026-01-01', delivery_date: '2026-01-02', forecast_publish_time: '2026-01-01T07:30:00Z', metrics: day.metrics, plan_metrics: day.plan_metrics }],
   overall: { count: 744, mae_mw: 2040, rmse_mw: 2500, bias_mw: 1750, wape_pct: 18.1 },
   error_percentiles: { p10_mw: -550, p50_mw: 1590, p90_mw: 4100 },
-  mae_by_hour: [{ hour: 0, mae_mw: 1900 }],
+  by_forecast_level: [{ low_mw: 20000, high_mw: 25000, count: 43, mae_mw: 4562, bias_mw: 4562 }],
   plan_overall: { count: 648, mae_mw: 1420, rmse_mw: 1870, bias_mw: 320, wape_pct: 13 },
   plan_range_hit_pct: 79.6,
 }
@@ -187,5 +187,13 @@ describe('App', () => {
     expect(await screen.findByText('Forecast runs for this delivery date')).toBeInTheDocument()
     expect(screen.getByText(/Used at gate closure \(07:30 UTC · 1 Jan\)/)).toBeInTheDocument()
     expect(screen.getByRole('img', { name: '3 forecast runs for 2026-01-02 compared with outturn' })).toBeInTheDocument()
+  })
+
+  it('shows bias by forecast level', async () => {
+    mockApi()
+    render(<App />)
+
+    expect(await screen.findByText('Bias by forecast level')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Forecast bias by forecast level' })).toBeInTheDocument()
   })
 })

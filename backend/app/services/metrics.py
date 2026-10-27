@@ -51,8 +51,21 @@ def error_percentiles(rows: list[HourlyComparison], pcts: tuple[float, ...] = (1
     return {p: percentile(errors, p) for p in pcts}
 
 
-def mae_by_hour(rows: list[HourlyComparison]) -> dict[int, float]:
+@dataclass(frozen=True)
+class LevelBucket:
+    low_mw: float
+    high_mw: float
+    count: int
+    mae_mw: float
+    bias_mw: float
+
+
+def error_by_forecast_level(rows: list[HourlyComparison], band_mw: float = 5000) -> list[LevelBucket]:
+    """Group errors by how much wind was forecast, to show whether big forecasts miss by more."""
     buckets: dict[int, list[float]] = defaultdict(list)
     for r in rows:
-        buckets[r.start_time.hour].append(abs(r.error_mw))
-    return {hour: sum(v) / len(v) for hour, v in sorted(buckets.items())}
+        buckets[int(max(r.forecast_mw, 0) // band_mw)].append(r.error_mw)
+    return [
+        LevelBucket(i * band_mw, (i + 1) * band_mw, len(e), sum(abs(x) for x in e) / len(e), sum(e) / len(e))
+        for i, e in sorted(buckets.items())
+    ]
