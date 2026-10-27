@@ -9,6 +9,7 @@
   --accent: #0f766e;
   --actual: #0f766e;
   --forecast: #d9480f;
+  --plan: #4f46e5;
   --bar: #94a3b8;
   --error: #b42318;
   color-scheme: light;
@@ -29,6 +30,7 @@
     --accent: #2dd4bf;
     --actual: #2dd4bf;
     --forecast: #fb923c;
+    --plan: #a5b4fc;
     --bar: #64748b;
     --error: #f97066;
     color-scheme: dark;

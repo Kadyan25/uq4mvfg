@@ -35,7 +35,7 @@ export function DayView({ day }: Props) {
         <KpiCard label="Bias" value={formatSignedGw(m?.bias_mw, 2)} hint={m ? biasLabel(m.bias_mw) : 'No outturn'}
           info={DEFINITIONS.bias} />
       </div>
-      <ForecastChart forecast={day.forecast} actuals={day.actuals} />
+      <ForecastChart forecast={day.forecast} actuals={day.actuals} plan={day.plan?.hours} />
     </>
   )
 }

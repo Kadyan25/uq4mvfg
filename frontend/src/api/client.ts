@@ -18,6 +18,21 @@ export interface HourlyRow {
   error_mw: number
 }
 
+export interface PlanHour {
+  time: string
+  plan_mw: number
+  low_mw: number
+  high_mw: number
+}
+
+export interface Plan {
+  history_days: number
+  p10_error_mw: number
+  p50_error_mw: number
+  p90_error_mw: number
+  hours: PlanHour[]
+}
+
 export interface DayResponse {
   decision_date: string
   delivery_date: string
@@ -28,6 +43,9 @@ export interface DayResponse {
   actuals: SeriesPoint[]
   hourly: HourlyRow[]
   metrics: Metrics | null
+  history_days: number
+  plan: Plan | null
+  plan_metrics: Metrics | null
 }
 
 export interface DaySummaryRow {
@@ -35,6 +53,7 @@ export interface DaySummaryRow {
   delivery_date: string
   forecast_publish_time: string | null
   metrics: Metrics | null
+  plan_metrics: Metrics | null
 }
 
 export interface SummaryResponse {
@@ -43,12 +62,15 @@ export interface SummaryResponse {
   overall: Metrics | null
   error_percentiles: { p10_mw: number; p50_mw: number; p90_mw: number } | null
   mae_by_hour: { hour: number; mae_mw: number }[]
+  plan_overall: Metrics | null
+  plan_range_hit_pct: number | null
 }
 
 export interface MetaResponse {
   first_decision_date: string
   last_decision_date: string
   default_cutoff: string
+  min_history_days: number
 }
 
 export class ApiError extends Error {}

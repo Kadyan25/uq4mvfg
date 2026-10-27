@@ -4,7 +4,7 @@ import { vi } from 'vitest'
 import App from './App'
 import type { DayResponse, SummaryResponse } from './api/client'
 
-const meta = { first_decision_date: '2026-01-01', last_decision_date: '2026-01-31', default_cutoff: '09:20' }
+const meta = { first_decision_date: '2026-01-01', last_decision_date: '2026-01-31', default_cutoff: '09:20', min_history_days: 3 }
 
 const day: DayResponse = {
   decision_date: '2026-01-01',
@@ -16,14 +16,25 @@ const day: DayResponse = {
   actuals: [{ time: '2026-01-02T00:00:00Z', mw: 10000 }, { time: '2026-01-02T00:30:00Z', mw: 10000 }],
   hourly: [{ time: '2026-01-02T00:00:00Z', forecast_mw: 11000, actual_mw: 10000, error_mw: 1000 }],
   metrics: { count: 1, mae_mw: 1000, rmse_mw: 1000, bias_mw: 1000, wape_pct: 10 },
+  history_days: 5,
+  plan: {
+    history_days: 5,
+    p10_error_mw: -500,
+    p50_error_mw: 1500,
+    p90_error_mw: 4000,
+    hours: [{ time: '2026-01-02T00:00:00Z', plan_mw: 9500, low_mw: 7000, high_mw: 11500 }],
+  },
+  plan_metrics: { count: 1, mae_mw: 500, rmse_mw: 500, bias_mw: -500, wape_pct: 5 },
 }
 
 const summary: SummaryResponse = {
   cutoff: '09:20',
-  days: [{ decision_date: '2026-01-01', delivery_date: '2026-01-02', forecast_publish_time: '2026-01-01T07:30:00Z', metrics: day.metrics }],
+  days: [{ decision_date: '2026-01-01', delivery_date: '2026-01-02', forecast_publish_time: '2026-01-01T07:30:00Z', metrics: day.metrics, plan_metrics: day.plan_metrics }],
   overall: { count: 744, mae_mw: 2040, rmse_mw: 2500, bias_mw: 1750, wape_pct: 18.1 },
   error_percentiles: { p10_mw: -550, p50_mw: 1590, p90_mw: 4100 },
   mae_by_hour: [{ hour: 0, mae_mw: 1900 }],
+  plan_overall: { count: 648, mae_mw: 1420, rmse_mw: 1870, bias_mw: 320, wape_pct: 13 },
+  plan_range_hit_pct: 79.6,
 }
 
 function json(body: unknown, status = 200) {
