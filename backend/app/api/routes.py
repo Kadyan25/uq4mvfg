@@ -10,8 +10,9 @@ from app.api import schemas
 from app.config import Settings, get_settings
 from app.elexon.client import ElexonClient, ElexonError
 from app.elexon.repository import WindDataRepository
-from app.services.analysis import DayAnalysis, PeriodSummary, analyse_day, analyse_period
+from app.services.analysis import DayAnalysis, PeriodSummary, PlanningConfig, analyse_day, analyse_period
 from app.services.metrics import ErrorMetrics
+from app.services.planning import PlanningEstimate
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api")
@@ -36,6 +37,7 @@ def meta(settings: Config) -> schemas.MetaResponse:
         first_decision_date=settings.first_decision_date,
         last_decision_date=settings.last_decision_date,
         default_cutoff=settings.default_cutoff.strftime("%H:%M"),
+        min_history_days=settings.min_history_days,
     )
 
 
@@ -45,7 +47,7 @@ def day(decision_date: date, repo: Repo, settings: Config, cutoff: CutoffParam =
         raise HTTPException(422, "decision_date is outside the supported range")
     cutoff_time = _resolve_cutoff(cutoff, settings)
     forecasts, actuals = _load(repo)
-    return _day_response(analyse_day(forecasts, actuals, decision_date, cutoff_time))
+    return _day_response(analyse_day(forecasts, actuals, decision_date, cutoff_time, _planning(settings)))
 
 
 @router.get("/summary", response_model=schemas.SummaryResponse)
@@ -54,7 +56,11 @@ def summary(repo: Repo, settings: Config, cutoff: CutoffParam = None) -> schemas
     span = (settings.last_decision_date - settings.first_decision_date).days
     dates = [settings.first_decision_date + timedelta(days=i) for i in range(span + 1)]
     forecasts, actuals = _load(repo)
-    return _summary_response(analyse_period(forecasts, actuals, dates, cutoff_time), cutoff_time)
+    return _summary_response(analyse_period(forecasts, actuals, dates, cutoff_time, _planning(settings)), cutoff_time)
+
+
+def _planning(settings: Settings) -> PlanningConfig:
+    return PlanningConfig(settings.first_decision_date, settings.min_history_days)
 
 
 def _resolve_cutoff(cutoff: str | None, settings: Settings) -> time:
@@ -71,6 +77,19 @@ def _load(repo: WindDataRepository):
 
 def _metrics(m: ErrorMetrics | None) -> schemas.Metrics | None:
     return schemas.Metrics(**asdict(m)) if m else None
+
+
+def _plan(plan: PlanningEstimate | None) -> schemas.Plan | None:
+    if not plan:
+        return None
+    return schemas.Plan(
+        history_days=plan.history_days,
+        p10_error_mw=plan.p10_mw,
+        p50_error_mw=plan.p50_mw,
+        p90_error_mw=plan.p90_mw,
+        hours=[schemas.PlanHourRow(time=h.start_time, plan_mw=h.plan_mw, low_mw=h.low_mw, high_mw=h.high_mw)
+               for h in plan.hours],
+    )
 
 
 def _day_response(result: DayAnalysis) -> schemas.DayResponse:
@@ -91,6 +110,9 @@ def _day_response(result: DayAnalysis) -> schemas.DayResponse:
             for h in result.hourly
         ],
         metrics=_metrics(result.metrics),
+        history_days=result.history_days,
+        plan=_plan(result.plan),
+        plan_metrics=_metrics(result.plan_metrics),
     )
 
 
@@ -104,10 +126,13 @@ def _summary_response(result: PeriodSummary, cutoff: time) -> schemas.SummaryRes
                 delivery_date=d.delivery_date,
                 forecast_publish_time=d.publish_time,
                 metrics=_metrics(d.metrics),
+                plan_metrics=_metrics(d.plan_metrics),
             )
             for d in result.days
         ],
         overall=_metrics(result.overall),
         error_percentiles=schemas.Percentiles(p10_mw=pct[10], p50_mw=pct[50], p90_mw=pct[90]) if pct else None,
         mae_by_hour=[schemas.HourOfDayError(hour=h, mae_mw=v) for h, v in result.mae_by_hour.items()],
+        plan_overall=_metrics(result.plan_overall),
+        plan_range_hit_pct=result.plan_range_hit_pct,
     )

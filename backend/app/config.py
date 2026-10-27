@@ -15,6 +15,8 @@ class Settings:
     last_decision_date: date = date(2026, 1, 31)
     # GB day-ahead auction (EPEX) gate closure is 09:20 UK time; UK time == UTC in January.
     default_cutoff: time = time(9, 20)
+    # Completed delivery dates needed before the planning estimate is shown; fewer is too noisy to trust.
+    min_history_days: int = 3
 
 
 @lru_cache

@@ -41,7 +41,7 @@ def client():
 def test_meta_Should_ReturnScopeAndDefaultCutoff(client):
     body = client.get("/api/meta").json()
 
-    assert body == {"first_decision_date": "2026-01-01", "last_decision_date": "2026-01-31", "default_cutoff": "09:20"}
+    assert body == {"first_decision_date": "2026-01-01", "last_decision_date": "2026-01-31", "default_cutoff": "09:20", "min_history_days": 3}
 
 
 def test_day_Should_UseDefaultCutoff_When_NoneGiven(client):
@@ -60,6 +60,9 @@ def test_day_Should_UseDefaultCutoff_When_NoneGiven(client):
         "time": "2026-01-15T00:00:00Z", "forecast_mw": 1100.0, "actual_mw": 1000.0, "error_mw": 100.0,
     }
     assert body["metrics"]["mae_mw"] == pytest.approx(100)
+    assert body["history_days"] == 0
+    assert body["plan"] is None
+    assert body["plan_metrics"] is None
 
 
 def test_day_Should_PickEarlierRun_When_CutoffMovedEarlier(client):

@@ -23,6 +23,21 @@ class HourlyRow(BaseModel):
     error_mw: float
 
 
+class PlanHourRow(BaseModel):
+    time: datetime
+    plan_mw: float
+    low_mw: float
+    high_mw: float
+
+
+class Plan(BaseModel):
+    history_days: int
+    p10_error_mw: float
+    p50_error_mw: float
+    p90_error_mw: float
+    hours: list[PlanHourRow]
+
+
 class DayResponse(BaseModel):
     decision_date: date
     delivery_date: date
@@ -33,6 +48,9 @@ class DayResponse(BaseModel):
     actuals: list[SeriesPoint]
     hourly: list[HourlyRow]
     metrics: Metrics | None
+    history_days: int
+    plan: Plan | None
+    plan_metrics: Metrics | None
 
 
 class DaySummaryRow(BaseModel):
@@ -40,6 +58,7 @@ class DaySummaryRow(BaseModel):
     delivery_date: date
     forecast_publish_time: datetime | None
     metrics: Metrics | None
+    plan_metrics: Metrics | None
 
 
 class Percentiles(BaseModel):
@@ -59,9 +78,12 @@ class SummaryResponse(BaseModel):
     overall: Metrics | None
     error_percentiles: Percentiles | None
     mae_by_hour: list[HourOfDayError]
+    plan_overall: Metrics | None
+    plan_range_hit_pct: float | None
 
 
 class MetaResponse(BaseModel):
     first_decision_date: date
     last_decision_date: date
     default_cutoff: str
+    min_history_days: int
